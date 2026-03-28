@@ -12,7 +12,7 @@ public class Buttons : MonoBehaviour
     public void PlayGame()
     {
         // Loads the scene at index 1 in your Build Profiles
-        SceneManager.LoadScene(0); 
+        SceneManager.LoadScene(1); 
     }
 
     // Call this to exit the game
