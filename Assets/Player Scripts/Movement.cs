@@ -3,6 +3,8 @@ using UnityEngine;
 public class DonkeyCrankMovement : MonoBehaviour
 {
     [Header("Attachments")]
+    public Animator anim;
+    public SpriteRenderer donkeySprite; // Drag the donkey's SpriteRenderer here
     public Transform carrotPivot;
     public Transform stickTip;
     public Transform carrotObject;
@@ -43,24 +45,50 @@ public class DonkeyCrankMovement : MonoBehaviour
         carrotPivot.position = transform.position + pivotOffset;
         carrotPivot.rotation = Quaternion.Euler(0, 0, currentAngle - 90f);
 
-        // 2. Jumping
+        // 2. Ground Detection
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
+        // 3. Animation Logic
+        if (anim != null)
+        {
+            float currentHorizontalSpeed = Mathf.Abs(rb.linearVelocity.x);
+
+            // 1. Tell the animator how fast we are moving for transitions
+            anim.SetFloat("Speed", currentHorizontalSpeed);
+            anim.SetBool("isGrounded", isGrounded);
+
+            // 2. Adjust the Animation Playback Speed
+            // We divide by a 'base' speed so at 5 units/sec, he walks at 1x speed.
+            // Adjust the '5f' until the hooves stop sliding on the floor.
+            float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
+
+            // Clamp it so he doesn't move at 0 speed or lightning speed
+            anim.speed = Mathf.Clamp(animationSpeedMultiplier, 0.5f, 2.0f);
+        }
+
+        // 4. Sprite Flipping (Face the direction of movement)
+        if (donkeySprite != null && Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+        {
+            // If moving right (positive x), flipX = false. If left, flipX = true.
+            // Note: This depends on which way your original sprite faces.
+            donkeySprite.flipX = rb.linearVelocity.x < 0;
+        }
+
+        // 5. Jumping
         if (isGrounded && Input.GetButtonDown("Jump"))
         {
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
         }
 
+        // 6. Physics/Rope Visuals
         if (carrotObject != null)
         {
-            // OBSERVE: Calculate speed based on carrot distance from pivot
             Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
             float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
             targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
 
             carrotObject.rotation = Quaternion.identity;
 
-            // DRAW: Set rope positions (REVERTED to your preferred simple mapping)
             if (ropeRenderer != null && stickTip != null)
             {
                 ropeRenderer.SetPosition(0, stickTip.position);
@@ -71,7 +99,6 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Apply velocity only on X, preserving the current Y (falling/jumping)
         float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, acceleration * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
