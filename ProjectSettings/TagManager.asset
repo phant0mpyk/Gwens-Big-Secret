@@ -8,14 +8,14 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Ground
   - Water
   - UI
-  - Logo
-  - 
-  - 
-  - 
-  - 
+  - Player
+  - Stick
+  - Donkey
+  - Line
+  - Carrot
   - 
   - 
   - 
@@ -40,6 +40,18 @@ TagManager:
   m_SortingLayers:
   - name: Default
     uniqueID: 0
+    locked: 0
+  - name: Background
+    uniqueID: 2020658661
+    locked: 0
+  - name: Player
+    uniqueID: 1830626035
+    locked: 0
+  - name: Stick
+    uniqueID: 1625339455
+    locked: 0
+  - name: Carrot
+    uniqueID: 438594369
     locked: 0
   m_RenderingLayers:
   - Default
