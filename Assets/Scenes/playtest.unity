@@ -119,6 +119,50 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &116100004
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 116100006}
+  - component: {fileID: 116100005}
+  m_Layer: 0
+  m_Name: TrollManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &116100005
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 116100004}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 009411f5144ae6b4e94e0cb985906fda, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &116100006
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 116100004}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -2.9147143, y: 4.5572314, z: -0.111118525}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &256276422
 GameObject:
   m_ObjectHideFlags: 0
@@ -548,6 +592,8 @@ GameObject:
   - component: {fileID: 1054451919}
   - component: {fileID: 1054451918}
   - component: {fileID: 1054451917}
+  - component: {fileID: 1054451922}
+  - component: {fileID: 1054451921}
   m_Layer: 3
   m_Name: Static Sprite
   m_TagString: Untagged
@@ -692,12 +738,46 @@ Transform:
   m_GameObject: {fileID: 1054451916}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2.9, y: 0.42, z: 0}
+  m_LocalPosition: {x: -2.82, y: -0.19, z: 0}
   m_LocalScale: {x: 4.2364, y: 0.2623, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1054451921
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054451916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5607cd64e28f9c41ba673e64f876a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myTrollLevel: 1
+  spinSpeed: 400
+  deathYThreshold: -20
+  delayBeforeSpin: 2
+  spinDuration: 2
+--- !u!114 &1054451922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1054451916}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5607cd64e28f9c41ba673e64f876a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myTrollLevel: 5
+  spinSpeed: 400
+  deathYThreshold: -5
+  delayBeforeSpin: 2
+  spinDuration: 2
 --- !u!1 &1299089876
 GameObject:
   m_ObjectHideFlags: 0
@@ -1244,6 +1324,8 @@ GameObject:
   - component: {fileID: 1770352114}
   - component: {fileID: 1770352113}
   - component: {fileID: 1770352112}
+  - component: {fileID: 1770352117}
+  - component: {fileID: 1770352116}
   m_Layer: 3
   m_Name: Static Sprite (1)
   m_TagString: Untagged
@@ -1388,12 +1470,46 @@ Transform:
   m_GameObject: {fileID: 1770352111}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 4.43, y: 4.99, z: 0}
+  m_LocalPosition: {x: 4.51, y: 2.49, z: 0}
   m_LocalScale: {x: 4.2364, y: 0.2623, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1770352116
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770352111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5607cd64e28f9c41ba673e64f876a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myTrollLevel: 0
+  spinSpeed: 400
+  deathYThreshold: 1
+  delayBeforeSpin: 2
+  spinDuration: 2
+--- !u!114 &1770352117
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1770352111}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f5607cd64e28f9c41ba673e64f876a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  myTrollLevel: 0
+  spinSpeed: 400
+  deathYThreshold: -5
+  delayBeforeSpin: 2
+  spinDuration: 2
 --- !u!1 &1775040175
 GameObject:
   m_ObjectHideFlags: 0
@@ -1564,17 +1680,25 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 149982636006887179, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 4192314452150624232, guid: e54244901d610624cbb02f1d3731549b, type: 3}
     - target: {fileID: 233248209872353707, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_LinearDamping
-      value: 2
+      value: 0.2
       objectReference: {fileID: 0}
     - target: {fileID: 2928685295639863585, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Size.y
-      value: 0.4319253
+      value: 0.46345812
       objectReference: {fileID: 0}
     - target: {fileID: 2928685295639863585, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Offset.y
-      value: 0.0019468367
+      value: -0.013819575
+      objectReference: {fileID: 0}
+    - target: {fileID: 2928685295639863585, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_SpriteTilingProperty.oldSize.y
+      value: 0.49
       objectReference: {fileID: 0}
     - target: {fileID: 3522795017858890694, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Distance
@@ -1640,9 +1764,29 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4907005896107401664, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.5172719
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 0.61922944
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 0.6766686
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: -0.0003
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: -0.036
+      objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: maxSpeed
-      value: 8
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: jumpForce
@@ -1661,9 +1805,21 @@ PrefabInstance:
       value: 2
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: pivotOffset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: pivotOffset.y
+      value: 0.15
+      objectReference: {fileID: 0}
+    - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: brakeDeceleration
       value: 2.5
       objectReference: {fileID: 0}
+    - target: {fileID: 7953762664343901217, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -2223891651720402130, guid: 50523df82234c264c829112c59e1e076, type: 3}
     - target: {fileID: 8826298336129594918, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Name
       value: Player
@@ -1684,3 +1840,4 @@ SceneRoots:
   - {fileID: 1650744903}
   - {fileID: 1054451920}
   - {fileID: 1770352115}
+  - {fileID: 116100006}
