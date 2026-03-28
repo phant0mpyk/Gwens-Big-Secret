@@ -3,6 +3,8 @@ using UnityEngine;
 public class DonkeyCrankMovement : MonoBehaviour
 {
     [Header("Attachments")]
+    public Animator anim;
+    public SpriteRenderer donkeySprite;
     public Transform carrotPivot;
     public Transform stickTip;
     public Transform carrotObject;
@@ -13,9 +15,12 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float mouseSensitivity = 5f;
     public float maxSpeed = 10f;
     public float acceleration = 50f;
+    public float brakeDeceleration = 100f; // Fast stop when braking
 
-    [Header("Jump Settings")]
-    public float jumpForce = 12f;
+    [Header("Jump Charge Settings")]
+    public float minJumpForce = 5f;
+    public float maxJumpForce = 20f;
+    public float maxChargeTime = 1.0f; // Seconds to full power
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
@@ -24,43 +29,94 @@ public class DonkeyCrankMovement : MonoBehaviour
     private float currentAngle = 90f;
     private float targetMoveSpeed;
     private bool isGrounded;
+    private float jumpChargeTimer = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         Cursor.lockState = CursorLockMode.Locked;
-
         if (ropeRenderer != null) ropeRenderer.positionCount = 2;
     }
 
     void Update()
     {
-        // 1. Stick & Carrot Logic
+        // 1. Stick Logic (Always active)
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
         currentAngle = Mathf.Clamp(currentAngle, 0f, 180f);
-
         carrotPivot.position = transform.position + pivotOffset;
         carrotPivot.rotation = Quaternion.Euler(0, 0, currentAngle - 90f);
 
-        // 2. Jumping
+        // 2. Ground Detection
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        // 3. BRAKE & JUMP LOGIC
+        // If holding Space while on ground: Stop and Charge
+        if (isGrounded && Input.GetButton("Jump"))
         {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
+            targetMoveSpeed = 0;
+            jumpChargeTimer += Time.deltaTime;
+            jumpChargeTimer = Mathf.Min(jumpChargeTimer, maxChargeTime);
+
+            if (anim != null) anim.SetBool("isCharging", true); // Optional parameter
+        }
+        // If let go of Space: Release Jump
+        else if (isGrounded && Input.GetButtonUp("Jump"))
+        {
+            float chargePct = jumpChargeTimer / maxChargeTime;
+            float finalJumpForce = Mathf.Lerp(minJumpForce, maxJumpForce, chargePct);
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, finalJumpForce);
+
+            jumpChargeTimer = 0; // Reset
+            if (anim != null)
+            {
+                anim.SetBool("isCharging", false);
+                anim.SetTrigger("doJump"); // Trigger jump animation on release
+            }
+        }
+        // Normal movement
+        else
+        {
+            jumpChargeTimer = 0;
+            if (anim != null) anim.SetBool("isCharging", false);
+
+            if (carrotObject != null)
+            {
+                Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
+                float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
+                targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
+            }
         }
 
+        // 4. Animation & Sprite Logic
+        if (anim != null)
+        {
+            float currentHorizontalSpeed = Mathf.Abs(rb.linearVelocity.x);
+            anim.SetFloat("Speed", currentHorizontalSpeed);
+            anim.SetBool("isGrounded", isGrounded);
+
+            // Playback speed logic
+            if (isGrounded && !Input.GetButton("Jump"))
+            {
+                float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
+                anim.speed = Mathf.Clamp(animationSpeedMultiplier, 0.5f, 2.0f);
+            }
+            else
+            {
+                anim.speed = 1.0f; // Reset speed for Jump/Idle/Charge
+            }
+        }
+
+        if (donkeySprite != null && Mathf.Abs(rb.linearVelocity.x) > 0.1f)
+        {
+            donkeySprite.flipX = rb.linearVelocity.x < 0;
+        }
+
+        // 5. Rope Visuals
         if (carrotObject != null)
         {
-            // OBSERVE: Calculate speed based on carrot distance from pivot
-            Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
-            float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
-            targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
-
             carrotObject.rotation = Quaternion.identity;
-
-            // DRAW: Set rope positions (REVERTED to your preferred simple mapping)
             if (ropeRenderer != null && stickTip != null)
             {
                 ropeRenderer.SetPosition(0, stickTip.position);
@@ -71,8 +127,10 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Apply velocity only on X, preserving the current Y (falling/jumping)
-        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, acceleration * Time.fixedDeltaTime);
+        // Use higher deceleration when targetMoveSpeed is 0 (Braking)
+        float currentAccel = (targetMoveSpeed == 0) ? brakeDeceleration : acceleration;
+
+        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, currentAccel * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
 
