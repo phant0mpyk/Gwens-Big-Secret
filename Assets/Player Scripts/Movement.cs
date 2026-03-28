@@ -4,7 +4,7 @@ public class DonkeyCrankMovement : MonoBehaviour
 {
     [Header("Attachments")]
     public Animator anim;
-    public SpriteRenderer donkeySprite; // Drag the donkey's SpriteRenderer here
+    public SpriteRenderer donkeySprite;
     public Transform carrotPivot;
     public Transform stickTip;
     public Transform carrotObject;
@@ -15,9 +15,12 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float mouseSensitivity = 5f;
     public float maxSpeed = 10f;
     public float acceleration = 50f;
+    public float brakeDeceleration = 100f; // Fast stop when braking
 
-    [Header("Jump Settings")]
-    public float jumpForce = 12f;
+    [Header("Jump Charge Settings")]
+    public float minJumpForce = 5f;
+    public float maxJumpForce = 20f;
+    public float maxChargeTime = 1.0f; // Seconds to full power
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
@@ -26,69 +29,94 @@ public class DonkeyCrankMovement : MonoBehaviour
     private float currentAngle = 90f;
     private float targetMoveSpeed;
     private bool isGrounded;
+    private float jumpChargeTimer = 0f;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
         Cursor.lockState = CursorLockMode.Locked;
-
         if (ropeRenderer != null) ropeRenderer.positionCount = 2;
     }
 
     void Update()
     {
-        // 1. Stick & Carrot Logic
+        // 1. Stick Logic (Always active)
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
         currentAngle = Mathf.Clamp(currentAngle, 0f, 180f);
-
         carrotPivot.position = transform.position + pivotOffset;
         carrotPivot.rotation = Quaternion.Euler(0, 0, currentAngle - 90f);
 
         // 2. Ground Detection
         isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
 
-        // 3. Animation Logic
+        // 3. BRAKE & JUMP LOGIC
+        // If holding Space while on ground: Stop and Charge
+        if (isGrounded && Input.GetButton("Jump"))
+        {
+            targetMoveSpeed = 0;
+            jumpChargeTimer += Time.deltaTime;
+            jumpChargeTimer = Mathf.Min(jumpChargeTimer, maxChargeTime);
+
+            if (anim != null) anim.SetBool("isCharging", true); // Optional parameter
+        }
+        // If let go of Space: Release Jump
+        else if (isGrounded && Input.GetButtonUp("Jump"))
+        {
+            float chargePct = jumpChargeTimer / maxChargeTime;
+            float finalJumpForce = Mathf.Lerp(minJumpForce, maxJumpForce, chargePct);
+
+            rb.linearVelocity = new Vector2(rb.linearVelocity.x, finalJumpForce);
+
+            jumpChargeTimer = 0; // Reset
+            if (anim != null)
+            {
+                anim.SetBool("isCharging", false);
+                anim.SetTrigger("doJump"); // Trigger jump animation on release
+            }
+        }
+        // Normal movement
+        else
+        {
+            jumpChargeTimer = 0;
+            if (anim != null) anim.SetBool("isCharging", false);
+
+            if (carrotObject != null)
+            {
+                Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
+                float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
+                targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
+            }
+        }
+
+        // 4. Animation & Sprite Logic
         if (anim != null)
         {
             float currentHorizontalSpeed = Mathf.Abs(rb.linearVelocity.x);
-
-            // 1. Tell the animator how fast we are moving for transitions
             anim.SetFloat("Speed", currentHorizontalSpeed);
             anim.SetBool("isGrounded", isGrounded);
 
-            // 2. Adjust the Animation Playback Speed
-            // We divide by a 'base' speed so at 5 units/sec, he walks at 1x speed.
-            // Adjust the '5f' until the hooves stop sliding on the floor.
-            float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
-
-            // Clamp it so he doesn't move at 0 speed or lightning speed
-            anim.speed = Mathf.Clamp(animationSpeedMultiplier, 0.5f, 2.0f);
+            // Playback speed logic
+            if (isGrounded && !Input.GetButton("Jump"))
+            {
+                float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
+                anim.speed = Mathf.Clamp(animationSpeedMultiplier, 0.5f, 2.0f);
+            }
+            else
+            {
+                anim.speed = 1.0f; // Reset speed for Jump/Idle/Charge
+            }
         }
 
-        // 4. Sprite Flipping (Face the direction of movement)
         if (donkeySprite != null && Mathf.Abs(rb.linearVelocity.x) > 0.1f)
         {
-            // If moving right (positive x), flipX = false. If left, flipX = true.
-            // Note: This depends on which way your original sprite faces.
             donkeySprite.flipX = rb.linearVelocity.x < 0;
         }
 
-        // 5. Jumping
-        if (isGrounded && Input.GetButtonDown("Jump"))
-        {
-            rb.linearVelocity = new Vector2(rb.linearVelocity.x, jumpForce);
-        }
-
-        // 6. Physics/Rope Visuals
+        // 5. Rope Visuals
         if (carrotObject != null)
         {
-            Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
-            float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
-            targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
-
             carrotObject.rotation = Quaternion.identity;
-
             if (ropeRenderer != null && stickTip != null)
             {
                 ropeRenderer.SetPosition(0, stickTip.position);
@@ -99,7 +127,10 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, acceleration * Time.fixedDeltaTime);
+        // Use higher deceleration when targetMoveSpeed is 0 (Braking)
+        float currentAccel = (targetMoveSpeed == 0) ? brakeDeceleration : acceleration;
+
+        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, currentAccel * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
 
