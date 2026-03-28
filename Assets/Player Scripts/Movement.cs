@@ -31,6 +31,9 @@ public class DonkeyCrankMovement : MonoBehaviour
     private bool isGrounded;
     private float jumpChargeTimer = 0f;
 
+    // --- NEW VARIABLES FOR ICE & MUD ---
+    private float currentGroundFriction = 0f;
+    private bool isOnCustomMaterial = false;
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -48,8 +51,20 @@ public class DonkeyCrankMovement : MonoBehaviour
         carrotPivot.rotation = Quaternion.Euler(0, 0, currentAngle - 90f);
 
         // 2. Ground Detection
-        isGrounded = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        // 2. Ground Detection
+        Collider2D groundHit = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
+        isGrounded = groundHit != null;
 
+        if (isGrounded && groundHit.sharedMaterial != null)
+        {
+            currentGroundFriction = groundHit.sharedMaterial.friction;
+            isOnCustomMaterial = true;
+        }
+        else
+        {
+            currentGroundFriction = 0f;
+            isOnCustomMaterial = false;
+        }
         // 3. BRAKE & JUMP LOGIC
         // If holding Space while on ground: Stop and Charge
         if (isGrounded && Input.GetButton("Jump"))
@@ -127,10 +142,30 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        // Use higher deceleration when targetMoveSpeed is 0 (Braking)
-        float currentAccel = (targetMoveSpeed == 0) ? brakeDeceleration : acceleration;
+       // --- NEW SLIDING LOGIC IN FIXED UPDATE ---
+        float activeAccel = acceleration;
+        float activeDecel = brakeDeceleration;
+        float activeTargetSpeed = targetMoveSpeed;
 
-        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, targetMoveSpeed, currentAccel * Time.fixedDeltaTime);
+        if (isOnCustomMaterial)
+        {
+            if (currentGroundFriction <= 0.1f) // ICE 
+            {
+                activeAccel = acceleration * 0.2f; // Takes longer to speed up on ice
+                activeDecel = 2f;                  // Barely stops at all, causing a slide!
+            }
+            else if (currentGroundFriction >= 1.0f) // MUD
+            {
+                activeAccel = acceleration * 0.4f; // Sluggish to start moving
+                activeTargetSpeed *= 0.5f;         // Max speed is cut in half
+                // Decel stays high so they stop instantly in the mud
+            }
+        }
+
+        // Calculate final movement
+        float currentAccel = (activeTargetSpeed == 0) ? activeDecel : activeAccel;
+        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, activeTargetSpeed, currentAccel * Time.fixedDeltaTime);
+        
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
 
