@@ -25,6 +25,13 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
+    [Header("Scare Settings")]
+    public float scareSpeed = 15f;   // How fast the donkey runs away
+    public float scareDuration = 2f; // How many seconds the panic lasts
+    private bool isScared = false;
+    private float scareTimer = 0f;
+    private float scareDirection = 1f;
+
     private Rigidbody2D rb;
     private float currentAngle = 90f;
     private float targetMoveSpeed;
@@ -91,7 +98,7 @@ public class DonkeyCrankMovement : MonoBehaviour
             }
         }
         // Normal movement
-        else
+        else if (!isScared)
         {
             jumpChargeTimer = 0;
             if (anim != null) anim.SetBool("isCharging", false);
@@ -101,6 +108,18 @@ public class DonkeyCrankMovement : MonoBehaviour
                 Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
                 float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
                 targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
+            }
+        }
+
+        // --- NEW SCARE LOGIC ---
+        if (isScared)
+        {
+            scareTimer -= Time.deltaTime;
+            targetMoveSpeed = scareDirection * scareSpeed; // Force them to run!
+
+            if (scareTimer <= 0)
+            {
+                isScared = false; // Panic is over, back to the carrot
             }
         }
 
@@ -189,5 +208,17 @@ public class DonkeyCrankMovement : MonoBehaviour
                 Gizmos.DrawSphere(pos, 0.05f);
             }
         }
+    }
+
+    public void SpookDonkey(Vector3 snakePosition)
+    {
+        isScared = true;
+        scareTimer = scareDuration;
+
+        // Figure out which way to run (away from the snake!)
+        if (transform.position.x < snakePosition.x)
+            scareDirection = -1f; // Snake is on the right, run left!
+        else
+            scareDirection = 1f;  // Snake is on the left, run right!
     }
 }
