@@ -28,6 +28,11 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
+
+    [Header("Status Effects")]
+    public bool isInverted = false;
+    private float invertTimer = 0f;
+
     [Header("Scare Settings")]
     public float scareSpeed = 15f;
     public float scareDuration = 2f;
@@ -64,6 +69,15 @@ public class DonkeyCrankMovement : MonoBehaviour
     {
         if (isDead) return;
 
+        // --- STATUS EFFECT TIMERS ---
+        if (isInverted)
+        {
+            invertTimer -= Time.deltaTime;
+            if (invertTimer <= 0)
+            {
+                isInverted = false; // Time's up, back to normal!
+            }
+        }
         // 1. Stick Logic
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
@@ -125,6 +139,12 @@ public class DonkeyCrankMovement : MonoBehaviour
                 Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
                 float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
                 targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
+
+                // --- INVERT MOVEMENT MODIFIER ---
+                if (isInverted)
+                {
+                    targetMoveSpeed *= -1f; // Run away from the carrot!
+                }
             }
         }
 
@@ -287,5 +307,12 @@ public class DonkeyCrankMovement : MonoBehaviour
         if (anim != null) anim.speed = 1f; // Unfreeze animation
         
         Debug.Log("Respawned!");
+    }
+
+    public void InvertMovement(float duration)
+    {
+        isInverted = true;
+        invertTimer = duration;
+        Debug.Log("Oh no! Controls inverted for " + duration + " seconds!");
     }
 }
