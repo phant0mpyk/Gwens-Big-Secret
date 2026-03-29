@@ -1,45 +1,46 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Required for loading scenes
+using UnityEngine.SceneManagement;
+using System.Collections; // Required for Coroutines
 
 public class Buttons : MonoBehaviour
 {
-
     [Header("Menu Panels")]
-    // These create slots in the Inspector where you can drag your panels
     public GameObject optionsPanel;
     public GameObject infoPanel;
-    // Call this to load your first level
+
+    [Header("Audio")]
+    public AudioSource menuAudioSource; // Drag your AudioSource here
+    public AudioClip startSound;       // Drag your "Mario Start" clip here
+
     public void PlayGame()
     {
-        // Loads the scene at index 1 in your Build Profiles
-        SceneManager.LoadScene(1); 
+        // Instead of loading immediately, we start the "Play Sequence"
+        StartCoroutine(PlaySequence());
     }
 
-    // Call this to exit the game
+    // This handles the sound delay
+    IEnumerator PlaySequence()
+    {
+        if (menuAudioSource != null && startSound != null)
+        {
+            menuAudioSource.PlayOneShot(startSound);
+
+            // Wait for the length of the sound clip before switching scenes
+            yield return new WaitForSeconds(startSound.length);
+        }
+
+        SceneManager.LoadScene(1);
+    }
+
     public void QuitGame()
     {
-        Debug.Log("Game is quitting!"); // Just to confirm it works in the editor
+        Debug.Log("Game is quitting!");
         Application.Quit();
     }
 
-    public void OpenOptions()
-    {
-        optionsPanel.SetActive(true); // Turns the panel ON
-    }
-
-    public void CloseOptions()
-    {
-        optionsPanel.SetActive(false); // Turns the panel OFF
-    }
-
-    // Info Menu Logic
-    public void OpenInfo()
-    {
-        infoPanel.SetActive(true);
-    }
-
-    public void CloseInfo()
-    {
-        infoPanel.SetActive(false);
-    }
+    // --- Panel Logic ---
+    public void OpenOptions() => optionsPanel.SetActive(true);
+    public void CloseOptions() => optionsPanel.SetActive(false);
+    public void OpenInfo() => infoPanel.SetActive(true);
+    public void CloseInfo() => infoPanel.SetActive(false);
 }
