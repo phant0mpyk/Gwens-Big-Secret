@@ -36,6 +36,11 @@ public class DonkeyCrankMovement : MonoBehaviour
     private float scareDirection = 1f;
     public static event Action OnDudukPlayed;
 
+    [Header("Respawn Settings")]
+    public Vector3 currentRespawnPoint;
+    public bool isDead = false;
+    public float respawnDelay = 1.0f; // Wait 1 second before popping back
+
     private Rigidbody2D rb;
     private float currentAngle = 90f;
     private float targetMoveSpeed;
@@ -51,10 +56,14 @@ public class DonkeyCrankMovement : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         Cursor.lockState = CursorLockMode.Locked;
         if (ropeRenderer != null) ropeRenderer.positionCount = 2;
+
+        currentRespawnPoint = transform.position; // <--- ADD THIS LINE
     }
 
     void Update()
     {
+        if (isDead) return;
+
         // 1. Stick Logic
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
@@ -239,5 +248,44 @@ public class DonkeyCrankMovement : MonoBehaviour
         isScared = true;
         scareTimer = scareDuration;
         scareDirection = (transform.position.x < snakePosition.x) ? -1f : 1f;
+    }
+
+    // Call this when touching a checkpoint flag
+    public void UpdateRespawnPoint(Vector3 newPoint)
+    {
+        currentRespawnPoint = newPoint;
+        Debug.Log("Checkpoint Saved!");
+    }
+
+    // Call this when touching spikes or falling in a pit
+    public void Die()
+    {
+        if (isDead) return; // Prevent dying twice at the same time
+        
+        isDead = true;
+        rb.linearVelocity = Vector2.zero; // Stop all momentum instantly
+        
+        if (anim != null) anim.speed = 0; // Freeze the animation (or play a death anim!)
+        
+        Debug.Log("Donkey Died! Respawning soon...");
+        
+        // Wait for a moment, then call the Respawn function
+        Invoke("Respawn", respawnDelay); 
+    }
+
+    private void Respawn()
+    {
+        // Teleport back to the flag
+        transform.position = currentRespawnPoint; 
+        
+        // Reset everything
+        isDead = false;
+        isScared = false;
+        scareTimer = 0;
+        rb.linearVelocity = Vector2.zero;
+        
+        if (anim != null) anim.speed = 1f; // Unfreeze animation
+        
+        Debug.Log("Respawned!");
     }
 }
