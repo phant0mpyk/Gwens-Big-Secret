@@ -1,8 +1,13 @@
 using UnityEngine;
-using UnityEngine.SceneManagement; // Don't forget this if you want to load a new scene on collect!
 
-public class YogurtCollectible : MonoBehaviour
+public class Weed : MonoBehaviour
 {
+    [Header("Effect Settings")]
+    public float invertDuration = 10f;
+    
+    [Header("Visuals")]
+    public GameObject badPoofParticle; // Optional: a puff of purple smoke!
+
     [Header("Epic Visuals")]
     public float floatAmplitude = 0.25f; // How high it bobs
     public float floatFrequency = 2f;    // How fast it bobs
@@ -12,7 +17,7 @@ public class YogurtCollectible : MonoBehaviour
 
     private Vector3 startPos;
 
-    void Start()
+    private void Start()
     {
         // Remember where we placed it in the level so it bobs around that point
         startPos = transform.position;
@@ -24,16 +29,26 @@ public class YogurtCollectible : MonoBehaviour
         float newY = startPos.y + Mathf.Sin(Time.time * floatFrequency) * floatAmplitude;
         transform.position = new Vector3(startPos.x, newY, startPos.z);
     }
-
     private void OnTriggerEnter2D(Collider2D collision)
     {
-        // Did the donkey touch it?
         if (collision.CompareTag("Player"))
-        {
+        {   
             CollectYogurt();
-            SceneManager.LoadScene(2); // Optional: Restart the level after collecting (or you can do something else fun here!)
-        
-            
+            DonkeyCrankMovement donkey = collision.GetComponent<DonkeyCrankMovement>();
+            if (donkey != null)
+            {
+                // Poison the donkey!
+                donkey.InvertMovement(invertDuration);
+                
+                // Spawn the particle effect if you have one
+                if (badPoofParticle != null)
+                {
+                    Instantiate(badPoofParticle, transform.position, Quaternion.identity);
+                }
+
+                // Delete the collectible from the screen
+                Destroy(gameObject);
+            }
         }
     }
 
