@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 
+[RequireComponent(typeof(AudioSource))]
 public class DonkeyCrankMovement : MonoBehaviour
 {
     [Header("Attachments")]
@@ -10,6 +11,13 @@ public class DonkeyCrankMovement : MonoBehaviour
     public Transform stickTip;
     public Transform carrotObject;
     public LineRenderer ropeRenderer;
+
+    [Header("Audio Settings")]
+    public AudioClip jumpSound;
+    public AudioClip dudukSound;
+    public AudioClip deathSound;       // <--- NEW: Slot for falling/death sound
+    [Range(0, 1)] public float sfxVolume = 1f;
+    private AudioSource audioSource;
 
     [Header("Movement Settings")]
     public Vector3 pivotOffset = new Vector3(0, 1.5f, 0);
@@ -28,7 +36,6 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
-
     [Header("Status Effects")]
     public bool isInverted = false;
     private float invertTimer = 0f;
@@ -44,7 +51,7 @@ public class DonkeyCrankMovement : MonoBehaviour
     [Header("Respawn Settings")]
     public Vector3 currentRespawnPoint;
     public bool isDead = false;
-    public float respawnDelay = 1.0f; // Wait 1 second before popping back
+    public float respawnDelay = 1.0f;
 
     private Rigidbody2D rb;
     private float currentAngle = 90f;
@@ -52,17 +59,18 @@ public class DonkeyCrankMovement : MonoBehaviour
     private bool isGrounded;
     private float jumpChargeTimer = 0f;
 
-    // --- ICE & MUD VARIABLES ---
     private float currentGroundFriction = 0f;
     private bool isOnCustomMaterial = false;
 
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
+        audioSource = GetComponent<AudioSource>();
+
         Cursor.lockState = CursorLockMode.Locked;
         if (ropeRenderer != null) ropeRenderer.positionCount = 2;
 
-        currentRespawnPoint = transform.position; // <--- ADD THIS LINE
+        currentRespawnPoint = transform.position;
     }
 
     void Update()
@@ -73,11 +81,9 @@ public class DonkeyCrankMovement : MonoBehaviour
         if (isInverted)
         {
             invertTimer -= Time.deltaTime;
-            if (invertTimer <= 0)
-            {
-                isInverted = false; // Time's up, back to normal!
-            }
+            if (invertTimer <= 0) isInverted = false;
         }
+
         // 1. Stick Logic
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
@@ -114,13 +120,11 @@ public class DonkeyCrankMovement : MonoBehaviour
             float chargePct = jumpChargeTimer / maxChargeTime;
             float finalJumpForce = Mathf.Lerp(minJumpForce, maxJumpForce, chargePct);
 
-            // --- MUD JUMP PENALTY ---
-            if (isOnCustomMaterial && currentGroundFriction >= 1.0f)
-            {
-                finalJumpForce *= 0.5f;
-            }
+            if (isOnCustomMaterial && currentGroundFriction >= 1.0f) finalJumpForce *= 0.5f;
 
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, finalJumpForce);
+
+            PlaySFX(jumpSound);
 
             jumpChargeTimer = 0;
             if (anim != null)
@@ -133,22 +137,17 @@ public class DonkeyCrankMovement : MonoBehaviour
         {
             jumpChargeTimer = 0;
             if (anim != null) anim.SetBool("isCharging", false);
-                
+
             if (carrotObject != null)
             {
-                Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
+                Vector2 directionToCarrot = (Vector2)carrotObject.position - (Vector2)carrotPivot.position;
                 float carrotAngleRad = Mathf.Atan2(directionToCarrot.y, directionToCarrot.x);
                 targetMoveSpeed = Mathf.Cos(carrotAngleRad) * maxSpeed;
 
-                // --- INVERT MOVEMENT MODIFIER ---
-                if (isInverted)
-                {
-                    targetMoveSpeed *= -1f; // Run away from the carrot!
-                }
+                if (isInverted) targetMoveSpeed *= -1f;
             }
         }
 
-        // Scare Logic
         if (isScared)
         {
             scareTimer -= Time.deltaTime;
@@ -168,10 +167,7 @@ public class DonkeyCrankMovement : MonoBehaviour
                 float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
                 anim.speed = Mathf.Clamp(animationSpeedMultiplier, 0.5f, 2.0f);
             }
-            else
-            {
-                anim.speed = 1.0f;
-            }
+            else anim.speed = 1.0f;
         }
 
         if (donkeySprite != null && Mathf.Abs(rb.linearVelocity.x) > 0.1f)
@@ -189,13 +185,22 @@ public class DonkeyCrankMovement : MonoBehaviour
                 ropeRenderer.SetPosition(1, carrotObject.position);
             }
         }
+
+        // --- DUDUK LOGIC ---
         if (hasDuduk == true && Input.GetKeyDown(KeyCode.E))
         {
             OnDudukPlayed?.Invoke();
-            Debug.Log("duduk caliyo");
+            PlaySFX(dudukSound);
         }
     }
 
+    private void PlaySFX(AudioClip clip)
+    {
+        if (clip != null && audioSource != null)
+        {
+            audioSource.PlayOneShot(clip, sfxVolume);
+        }
+    }
 
     void FixedUpdate()
     {
@@ -206,16 +211,14 @@ public class DonkeyCrankMovement : MonoBehaviour
         if (isGrounded)
         {
             activeAccel = acceleration;
-
             if (isOnCustomMaterial)
             {
-                if (currentGroundFriction <= 0.1f) // ICE 
+                if (currentGroundFriction <= 0.1f)
                 {
-                    Debug.Log("ICE ice bby");
                     activeAccel = acceleration * 0.2f;
                     activeDecel = 2f;
                 }
-                else if (currentGroundFriction >= 1.0f) // MUD
+                else if (currentGroundFriction >= 1.0f)
                 {
                     activeAccel = acceleration * 0.7f;
                     activeDecel = brakeDeceleration * 3f;
@@ -225,21 +228,16 @@ public class DonkeyCrankMovement : MonoBehaviour
         }
         else
         {
-            // --- AIR CONTROL LOGIC ---
             activeAccel = airAcceleration;
-            activeDecel = airAcceleration; // Use same value so it doesn't "snap" stop in mid-air
+            activeDecel = airAcceleration;
         }
 
         float currentXVel = rb.linearVelocity.x;
-
-        // Determine if we are slowing down or speeding up
         bool isSlowingDown = Mathf.Abs(currentXVel) > Mathf.Abs(activeTargetSpeed);
         float chosenStep = isSlowingDown ? activeDecel : activeAccel;
-
         float velocityX = Mathf.MoveTowards(currentXVel, activeTargetSpeed, chosenStep * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
-
 
     private void OnDrawGizmos()
     {
@@ -248,19 +246,30 @@ public class DonkeyCrankMovement : MonoBehaviour
             Gizmos.color = isGrounded ? Color.green : Color.red;
             Gizmos.DrawWireSphere(groundCheck.position, groundCheckRadius);
         }
+    }
 
-        if (carrotPivot != null)
-        {
-            Gizmos.color = Color.yellow;
-            Vector3 center = transform.position + pivotOffset;
-            float radius = 2f;
-            for (int i = 0; i <= 180; i += 10)
-            {
-                float rad = i * Mathf.Deg2Rad;
-                Vector3 pos = center + new Vector3(Mathf.Cos(rad), Mathf.Sin(rad), 0) * radius;
-                Gizmos.DrawSphere(pos, 0.05f);
-            }
-        }
+    public void Die()
+    {
+        if (isDead) return;
+
+        isDead = true;
+        rb.linearVelocity = Vector2.zero;
+
+        // --- PLAY DEATH/FALLING SOUND ---
+        PlaySFX(deathSound);
+
+        if (anim != null) anim.speed = 0;
+        Invoke("Respawn", respawnDelay);
+    }
+
+    private void Respawn()
+    {
+        transform.position = currentRespawnPoint;
+        isDead = false;
+        isScared = false;
+        scareTimer = 0;
+        rb.linearVelocity = Vector2.zero;
+        if (anim != null) anim.speed = 1f;
     }
 
     public void SpookDonkey(Vector3 snakePosition)
@@ -270,49 +279,6 @@ public class DonkeyCrankMovement : MonoBehaviour
         scareDirection = (transform.position.x < snakePosition.x) ? -1f : 1f;
     }
 
-    // Call this when touching a checkpoint flag
-    public void UpdateRespawnPoint(Vector3 newPoint)
-    {
-        currentRespawnPoint = newPoint;
-        Debug.Log("Checkpoint Saved!");
-    }
-
-    // Call this when touching spikes or falling in a pit
-    public void Die()
-    {
-        if (isDead) return; // Prevent dying twice at the same time
-        
-        isDead = true;
-        rb.linearVelocity = Vector2.zero; // Stop all momentum instantly
-        
-        if (anim != null) anim.speed = 0; // Freeze the animation (or play a death anim!)
-        
-        Debug.Log("Donkey Died! Respawning soon...");
-        
-        // Wait for a moment, then call the Respawn function
-        Invoke("Respawn", respawnDelay); 
-    }
-
-    private void Respawn()
-    {
-        // Teleport back to the flag
-        transform.position = currentRespawnPoint; 
-        
-        // Reset everything
-        isDead = false;
-        isScared = false;
-        scareTimer = 0;
-        rb.linearVelocity = Vector2.zero;
-        
-        if (anim != null) anim.speed = 1f; // Unfreeze animation
-        
-        Debug.Log("Respawned!");
-    }
-
-    public void InvertMovement(float duration)
-    {
-        isInverted = true;
-        invertTimer = duration;
-        Debug.Log("Oh no! Controls inverted for " + duration + " seconds!");
-    }
+    public void UpdateRespawnPoint(Vector3 newPoint) => currentRespawnPoint = newPoint;
+    public void InvertMovement(float duration) { isInverted = true; invertTimer = duration; }
 }
