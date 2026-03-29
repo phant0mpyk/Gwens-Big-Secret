@@ -4,9 +4,13 @@ using System.Collections;
 public class DudukPlatform : MonoBehaviour
 {
     [Header("Movement Settings")]
-    public Vector3 raisedOffset = new Vector3(0, 5f, 0); // How far up it goes
+    public Vector3 raisedOffset = new Vector3(0, 5f, 0);
     public float moveSpeed = 3f;
-    public float activeDuration = 5f; // How long it stays up
+    public float activeDuration = 5f;
+
+    [Header("Proximity Settings")]
+    public Transform playerTransform; // Drag the Player object here in Inspector
+    public float triggerDistance = 10f; // Only activates if player is within 10 units
 
     private Vector3 loweredPos;
     private Vector3 raisedPos;
@@ -16,15 +20,30 @@ public class DudukPlatform : MonoBehaviour
     {
         loweredPos = transform.position;
         raisedPos = loweredPos + raisedOffset;
+
+        // Auto-find player if not assigned (optional)
+        if (playerTransform == null)
+        {
+            GameObject player = GameObject.FindGameObjectWithTag("Player");
+            if (player != null) playerTransform = player.transform;
+        }
     }
 
-    // Subscribe to the Donkey's broadcast when this object exists
-    void OnEnable() => DonkeyCrankMovement.OnDudukPlayed += ActivatePlatform;
-    void OnDisable() => DonkeyCrankMovement.OnDudukPlayed -= ActivatePlatform;
+    void OnEnable() => DonkeyCrankMovement.OnDudukPlayed += TryActivate;
+    void OnDisable() => DonkeyCrankMovement.OnDudukPlayed -= TryActivate;
 
-    void ActivatePlatform()
+    void TryActivate()
     {
-        if (!isActive) StartCoroutine(MoveRoutine());
+        // Only run if not already moving
+        if (isActive) return;
+
+        // Check distance between player and platform
+        float dist = Vector3.Distance(transform.position, playerTransform.position);
+
+        if (dist <= triggerDistance)
+        {
+            StartCoroutine(MoveRoutine());
+        }
     }
 
     IEnumerator MoveRoutine()
@@ -49,5 +68,12 @@ public class DudukPlatform : MonoBehaviour
         }
 
         isActive = false;
+    }
+
+    // Visual aid in the Editor to see the activation range
+    void OnDrawGizmosSelected()
+    {
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawWireSphere(transform.position, triggerDistance);
     }
 }
