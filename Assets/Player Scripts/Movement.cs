@@ -197,9 +197,9 @@ public class DonkeyCrankMovement : MonoBehaviour
                 }
                 else if (currentGroundFriction >= 1.0f) // MUD
                 {
-                    activeAccel = acceleration * 0.3f;
+                    activeAccel = acceleration * 0.7f;
                     activeDecel = brakeDeceleration * 3f;
-                    activeTargetSpeed *= 0.3f;
+                    activeTargetSpeed *= 0.6f;
                 }
             }
         }
