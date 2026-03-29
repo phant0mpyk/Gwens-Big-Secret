@@ -14775,11 +14775,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4241691553456002164, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 54.8
+      value: -45.4
       objectReference: {fileID: 0}
     - target: {fileID: 4241691553456002164, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 5.6
+      value: -3.7
       objectReference: {fileID: 0}
     - target: {fileID: 4241691553456002164, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -16550,7 +16550,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: press space to jump
+  m_text: 'press space to jump
+
+    Press E to use items'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: cb4544a33975ed74a9d2be4b4caaec8f, type: 2}
   m_sharedMaterial: {fileID: 6663088987124053963, guid: cb4544a33975ed74a9d2be4b4caaec8f, type: 2}
