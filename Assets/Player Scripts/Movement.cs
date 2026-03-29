@@ -15,19 +15,19 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float mouseSensitivity = 5f;
     public float maxSpeed = 10f;
     public float acceleration = 50f;
-    public float brakeDeceleration = 100f; // Fast stop when braking
+    public float brakeDeceleration = 10f;
 
     [Header("Jump Charge Settings")]
     public float minJumpForce = 5f;
     public float maxJumpForce = 20f;
-    public float maxChargeTime = 1.0f; // Seconds to full power
+    public float maxChargeTime = 1.0f;
     public Transform groundCheck;
     public float groundCheckRadius = 0.2f;
     public LayerMask groundLayer;
 
     [Header("Scare Settings")]
-    public float scareSpeed = 15f;   // How fast the donkey runs away
-    public float scareDuration = 2f; // How many seconds the panic lasts
+    public float scareSpeed = 15f;
+    public float scareDuration = 2f;
     private bool isScared = false;
     private float scareTimer = 0f;
     private float scareDirection = 1f;
@@ -38,9 +38,10 @@ public class DonkeyCrankMovement : MonoBehaviour
     private bool isGrounded;
     private float jumpChargeTimer = 0f;
 
-    // --- NEW VARIABLES FOR ICE & MUD ---
+    // --- ICE & MUD VARIABLES ---
     private float currentGroundFriction = 0f;
     private bool isOnCustomMaterial = false;
+
     void Start()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -50,7 +51,7 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void Update()
     {
-        // 1. Stick Logic (Always active)
+        // 1. Stick Logic
         float mouseX = Input.GetAxis("Mouse X");
         currentAngle -= mouseX * mouseSensitivity;
         currentAngle = Mathf.Clamp(currentAngle, 0f, 180f);
@@ -58,11 +59,10 @@ public class DonkeyCrankMovement : MonoBehaviour
         carrotPivot.rotation = Quaternion.Euler(0, 0, currentAngle - 90f);
 
         // 2. Ground Detection
-        // 2. Ground Detection
         Collider2D groundHit = Physics2D.OverlapCircle(groundCheck.position, groundCheckRadius, groundLayer);
         isGrounded = groundHit != null;
 
-        if (isGrounded && groundHit.sharedMaterial != null)
+        if (isGrounded && groundHit != null && groundHit.sharedMaterial != null)
         {
             currentGroundFriction = groundHit.sharedMaterial.friction;
             isOnCustomMaterial = true;
@@ -72,32 +72,36 @@ public class DonkeyCrankMovement : MonoBehaviour
             currentGroundFriction = 0f;
             isOnCustomMaterial = false;
         }
+
         // 3. BRAKE & JUMP LOGIC
-        // If holding Space while on ground: Stop and Charge
         if (isGrounded && Input.GetButton("Jump"))
         {
             targetMoveSpeed = 0;
             jumpChargeTimer += Time.deltaTime;
             jumpChargeTimer = Mathf.Min(jumpChargeTimer, maxChargeTime);
 
-            if (anim != null) anim.SetBool("isCharging", true); // Optional parameter
+            if (anim != null) anim.SetBool("isCharging", true);
         }
-        // If let go of Space: Release Jump
         else if (isGrounded && Input.GetButtonUp("Jump"))
         {
             float chargePct = jumpChargeTimer / maxChargeTime;
             float finalJumpForce = Mathf.Lerp(minJumpForce, maxJumpForce, chargePct);
 
+            // --- MUD JUMP PENALTY ---
+            if (isOnCustomMaterial && currentGroundFriction >= 1.0f)
+            {
+                finalJumpForce *= 0.5f;
+            }
+
             rb.linearVelocity = new Vector2(rb.linearVelocity.x, finalJumpForce);
 
-            jumpChargeTimer = 0; // Reset
+            jumpChargeTimer = 0;
             if (anim != null)
             {
                 anim.SetBool("isCharging", false);
-                anim.SetTrigger("doJump"); // Trigger jump animation on release
+                anim.SetTrigger("doJump");
             }
         }
-        // Normal movement
         else if (!isScared)
         {
             jumpChargeTimer = 0;
@@ -111,16 +115,12 @@ public class DonkeyCrankMovement : MonoBehaviour
             }
         }
 
-        // --- NEW SCARE LOGIC ---
+        // Scare Logic
         if (isScared)
         {
             scareTimer -= Time.deltaTime;
-            targetMoveSpeed = scareDirection * scareSpeed; // Force them to run!
-
-            if (scareTimer <= 0)
-            {
-                isScared = false; // Panic is over, back to the carrot
-            }
+            targetMoveSpeed = scareDirection * scareSpeed;
+            if (scareTimer <= 0) isScared = false;
         }
 
         // 4. Animation & Sprite Logic
@@ -130,7 +130,6 @@ public class DonkeyCrankMovement : MonoBehaviour
             anim.SetFloat("Speed", currentHorizontalSpeed);
             anim.SetBool("isGrounded", isGrounded);
 
-            // Playback speed logic
             if (isGrounded && !Input.GetButton("Jump"))
             {
                 float animationSpeedMultiplier = currentHorizontalSpeed / 5f;
@@ -138,7 +137,7 @@ public class DonkeyCrankMovement : MonoBehaviour
             }
             else
             {
-                anim.speed = 1.0f; // Reset speed for Jump/Idle/Charge
+                anim.speed = 1.0f;
             }
         }
 
@@ -161,7 +160,6 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-       // --- NEW SLIDING LOGIC IN FIXED UPDATE ---
         float activeAccel = acceleration;
         float activeDecel = brakeDeceleration;
         float activeTargetSpeed = targetMoveSpeed;
@@ -170,23 +168,27 @@ public class DonkeyCrankMovement : MonoBehaviour
         {
             if (currentGroundFriction <= 0.1f) // ICE 
             {
-                activeAccel = acceleration * 0.2f; // Takes longer to speed up on ice
-                activeDecel = 2f;                  // Barely stops at all, causing a slide!
+                activeAccel = acceleration * 0.2f;
+                activeDecel = 2f; // Very low decel = sliding
             }
             else if (currentGroundFriction >= 1.0f) // MUD
             {
-                activeAccel = acceleration * 0.4f; // Sluggish to start moving
-                activeTargetSpeed *= 0.2f;
-                Debug.Log("MUDDY GROUND!");
-                    // Max speed is cut in half
-                // Decel stays high so they stop instantly in the mud
+                activeAccel = acceleration * 0.3f; // Hard to speed up
+                activeDecel = brakeDeceleration * 30f; // Stop instantly (sticky)
+                activeTargetSpeed *= 0.3f; // Much slower max speed
             }
         }
 
-        // Calculate final movement
-        float currentAccel = (activeTargetSpeed == 0) ? activeDecel : activeAccel;
-        float velocityX = Mathf.MoveTowards(rb.linearVelocity.x, activeTargetSpeed, currentAccel * Time.fixedDeltaTime);
-        
+        // Logic to determine if we are accelerating or braking
+        float currentXVel = rb.linearVelocity.x;
+        bool isBraking = (activeTargetSpeed == 0) || (Mathf.Sign(currentXVel) != Mathf.Sign(activeTargetSpeed) && activeTargetSpeed != 0);
+
+        // If the current speed is higher than the target speed (like entering mud), use deceleration
+        if (Mathf.Abs(currentXVel) > Mathf.Abs(activeTargetSpeed)) isBraking = true;
+
+        float chosenStep = isBraking ? activeDecel : activeAccel;
+
+        float velocityX = Mathf.MoveTowards(currentXVel, activeTargetSpeed, chosenStep * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
 
@@ -216,11 +218,6 @@ public class DonkeyCrankMovement : MonoBehaviour
     {
         isScared = true;
         scareTimer = scareDuration;
-
-        // Figure out which way to run (away from the snake!)
-        if (transform.position.x < snakePosition.x)
-            scareDirection = -1f; // Snake is on the right, run left!
-        else
-            scareDirection = 1f;  // Snake is on the left, run right!
+        scareDirection = (transform.position.x < snakePosition.x) ? -1f : 1f;
     }
 }
