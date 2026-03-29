@@ -14817,6 +14817,18 @@ PrefabInstance:
       propertyPath: m_ConstrainProportionsScale
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 5533378780220196360, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: maxSpeed
       value: 12
@@ -14861,6 +14873,10 @@ PrefabInstance:
       propertyPath: brakeDeceleration
       value: 5
       objectReference: {fileID: 0}
+    - target: {fileID: 7953762664343901217, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: -2223891651720402130, guid: 50523df82234c264c829112c59e1e076, type: 3}
     - target: {fileID: 8826298336129594918, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Name
       value: Player
