@@ -295,8 +295,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
-  m_fontSizeBase: 18
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -13522,6 +13522,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 233248209872353707, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: m_Mass
+      value: 0.5
+      objectReference: {fileID: 0}
     - target: {fileID: 4241691553456002164, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_LocalScale.x
       value: 3
@@ -13580,7 +13584,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: maxSpeed
-      value: 7
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: scareSpeed
@@ -13588,11 +13592,15 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: acceleration
-      value: 2
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: maxJumpForce
-      value: 30
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: minJumpForce
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: scareDuration
@@ -13600,7 +13608,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: airAcceleration
-      value: 15
+      value: 40
+      objectReference: {fileID: 0}
+    - target: {fileID: 7300802673320190063, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
+      propertyPath: brakeDeceleration
+      value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 8826298336129594918, guid: 4fe9f6403c508a94b8257e5dd331627b, type: 3}
       propertyPath: m_Name
@@ -14700,7 +14712,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -251.94, y: -77.77}
+  m_AnchoredPosition: {x: -251.626, y: -77.492}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2062065817
@@ -14750,8 +14762,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
-  m_fontSizeBase: 18
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
