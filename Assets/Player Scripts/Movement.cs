@@ -15,6 +15,7 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float mouseSensitivity = 5f;
     public float maxSpeed = 10f;
     public float acceleration = 50f;
+    public float airAcceleration = 10f;
     public float brakeDeceleration = 10f;
 
     [Header("Jump Charge Settings")]
@@ -106,7 +107,7 @@ public class DonkeyCrankMovement : MonoBehaviour
         {
             jumpChargeTimer = 0;
             if (anim != null) anim.SetBool("isCharging", false);
-
+                
             if (carrotObject != null)
             {
                 Vector2 directionToCarrot = carrotObject.position - carrotPivot.position;
@@ -160,33 +161,42 @@ public class DonkeyCrankMovement : MonoBehaviour
 
     void FixedUpdate()
     {
-        float activeAccel = acceleration;
+        float activeAccel;
         float activeDecel = brakeDeceleration;
         float activeTargetSpeed = targetMoveSpeed;
 
-        if (isOnCustomMaterial)
+        if (isGrounded)
         {
-            if (currentGroundFriction <= 0.1f) // ICE 
+            activeAccel = acceleration;
+
+            if (isOnCustomMaterial)
             {
-                activeAccel = acceleration * 0.2f;
-                activeDecel = 2f; // Very low decel = sliding
-            }
-            else if (currentGroundFriction >= 1.0f) // MUD
-            {
-                activeAccel = acceleration * 0.3f; // Hard to speed up
-                activeDecel = brakeDeceleration * 30f; // Stop instantly (sticky)
-                activeTargetSpeed *= 0.3f; // Much slower max speed
+                if (currentGroundFriction <= 0.1f) // ICE 
+                {
+                    Debug.Log("ICE ice bby");
+                    activeAccel = acceleration * 0.2f;
+                    activeDecel = 2f;
+                }
+                else if (currentGroundFriction >= 1.0f) // MUD
+                {
+                    activeAccel = acceleration * 0.3f;
+                    activeDecel = brakeDeceleration * 3f;
+                    activeTargetSpeed *= 0.3f;
+                }
             }
         }
+        else
+        {
+            // --- AIR CONTROL LOGIC ---
+            activeAccel = airAcceleration;
+            activeDecel = airAcceleration; // Use same value so it doesn't "snap" stop in mid-air
+        }
 
-        // Logic to determine if we are accelerating or braking
         float currentXVel = rb.linearVelocity.x;
-        bool isBraking = (activeTargetSpeed == 0) || (Mathf.Sign(currentXVel) != Mathf.Sign(activeTargetSpeed) && activeTargetSpeed != 0);
 
-        // If the current speed is higher than the target speed (like entering mud), use deceleration
-        if (Mathf.Abs(currentXVel) > Mathf.Abs(activeTargetSpeed)) isBraking = true;
-
-        float chosenStep = isBraking ? activeDecel : activeAccel;
+        // Determine if we are slowing down or speeding up
+        bool isSlowingDown = Mathf.Abs(currentXVel) > Mathf.Abs(activeTargetSpeed);
+        float chosenStep = isSlowingDown ? activeDecel : activeAccel;
 
         float velocityX = Mathf.MoveTowards(currentXVel, activeTargetSpeed, chosenStep * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
