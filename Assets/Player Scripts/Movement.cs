@@ -176,7 +176,9 @@ public class DonkeyCrankMovement : MonoBehaviour
             else if (currentGroundFriction >= 1.0f) // MUD
             {
                 activeAccel = acceleration * 0.4f; // Sluggish to start moving
-                activeTargetSpeed *= 0.5f;         // Max speed is cut in half
+                activeTargetSpeed *= 0.2f;
+                Debug.Log("MUDDY GROUND!");
+                    // Max speed is cut in half
                 // Decel stays high so they stop instantly in the mud
             }
         }
