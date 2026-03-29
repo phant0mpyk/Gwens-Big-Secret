@@ -700,7 +700,7 @@ GameObject:
   - component: {fileID: 897807098}
   - component: {fileID: 897807097}
   m_Layer: 0
-  m_Name: snake_head_0
+  m_Name: whistle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
