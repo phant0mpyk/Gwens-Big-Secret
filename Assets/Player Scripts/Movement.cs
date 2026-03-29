@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class DonkeyCrankMovement : MonoBehaviour
@@ -17,6 +18,7 @@ public class DonkeyCrankMovement : MonoBehaviour
     public float acceleration = 50f;
     public float airAcceleration = 10f;
     public float brakeDeceleration = 10f;
+    public bool hasDuduk = false;
 
     [Header("Jump Charge Settings")]
     public float minJumpForce = 5f;
@@ -32,6 +34,7 @@ public class DonkeyCrankMovement : MonoBehaviour
     private bool isScared = false;
     private float scareTimer = 0f;
     private float scareDirection = 1f;
+    public static event Action OnDudukPlayed;
 
     private Rigidbody2D rb;
     private float currentAngle = 90f;
@@ -157,7 +160,13 @@ public class DonkeyCrankMovement : MonoBehaviour
                 ropeRenderer.SetPosition(1, carrotObject.position);
             }
         }
+        if (hasDuduk == true && Input.GetKeyDown(KeyCode.E))
+        {
+            OnDudukPlayed?.Invoke();
+            Debug.Log("duduk caliyo");
+        }
     }
+
 
     void FixedUpdate()
     {
@@ -201,6 +210,7 @@ public class DonkeyCrankMovement : MonoBehaviour
         float velocityX = Mathf.MoveTowards(currentXVel, activeTargetSpeed, chosenStep * Time.fixedDeltaTime);
         rb.linearVelocity = new Vector2(velocityX, rb.linearVelocity.y);
     }
+
 
     private void OnDrawGizmos()
     {
